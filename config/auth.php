@@ -74,15 +74,15 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
+            'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
         'staff' => [
             'driver' => 'eloquent',
-            'model' => Staff::class,
+            'model' => App\Models\Staff::class,
         ],
         'customers' => [
             'driver' => 'eloquent',
-            'model' => Customer::class,
+            'model' => App\Models\Customer::class,
         ],
 
         // 'users' => [
