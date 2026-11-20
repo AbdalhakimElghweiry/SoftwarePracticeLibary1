@@ -1,42 +1,40 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Http\Requests\StaffStoreRequest;
 use App\Http\Requests\StaffUpdateRequest;
 use App\Http\Resources\StaffResource;
-use Illuminate\Http\Request;
 use App\Models\Staff;
 
 class StaffController extends Controller
 {
     public function index()
     {
-        $staff = Staff::all();
-        return StaffResource::collection($staff);
+        return StaffResource::collection(Staff::all());
     }
+
     public function store(StaffStoreRequest $request)
     {
-        $validated = $request->validated();
-        $staff = Staff::create($validated);
-        return StaffResource::make($staff);;
+        $staff = Staff::create($request->validated());
+        return StaffResource::make($staff)->response()->setStatusCode(201);
     }
-    public function show ($id){
-        $staff = Staff::find($id);
+
+    public function show($id)
+    {
+        return StaffResource::make(Staff::findOrFail($id));
+    }
+
+    public function update($id, StaffUpdateRequest $request)
+    {
+        $staff = Staff::findOrFail($id);
+        $staff->update($request->validated());
         return StaffResource::make($staff);
     }
-    public function update( $id,StaffUpdateRequest $request)
-    {
-        $staff = Staff::find($id);
-        $validated = $request->validated();
-        $staff->update($validated);
-        return StaffResource::make($staff);;
-    }
 
-    public function destroy ($id)
+    public function destroy($id)
     {
-        $staff = Staff::findorfile($id);
-        $staff->delete();
-        return response()->json(['message'=> 'Staff Deleteed']);
+        Staff::findOrFail($id)->delete();
+        return response()->json(['message' => 'Staff deleted successfully']);
     }
-
 }

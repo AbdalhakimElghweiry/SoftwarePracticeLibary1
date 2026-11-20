@@ -6,39 +6,50 @@ use App\Http\Requests\StoreBookRequest;
 use App\Http\Requests\UpdateBookRequest;
 use App\Http\Resources\BookResource;
 use App\Models\Book;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Request;
 
 class BookController extends Controller
 {
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request)
     {
-        return BookResource::collection(Book::all());
+        $query = Book::query();
+
+        if ($request->search) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+        if ($request->category_id) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        return BookResource::collection($query->get());
     }
 
-    public function store(StoreBookRequest $request): JsonResponse
+    public function store(StoreBookRequest $request)
     {
         $book = Book::create($request->validated());
-
-        return BookResource::make($book)->response()->setStatusCode(201);
+        return (new BookResource($book))->response()->setStatusCode(201);
     }
 
-    public function show(Book $book): BookResource
+    public function show(Book $book)
     {
-        return BookResource::make($book);
+        return new BookResource($book->load('category'));
     }
 
-    public function update(UpdateBookRequest $request, Book $book): BookResource
+    public function update(UpdateBookRequest $request, Book $book)
     {
         $book->update($request->validated());
-
-        return BookResource::make($book);
+        return new BookResource($book);
     }
 
-    public function destroy(Book $book): JsonResponse
+    public function destroy(Book $book)
     {
-        $book->delete();
+        if ($book->borrowings()->exists()) {
+            return response()->json([
+                'message' => 'This book has borrowing records and cannot be deleted',
+            ], 409);
+        }
 
+        $book->delete();
         return response()->noContent();
     }
 }

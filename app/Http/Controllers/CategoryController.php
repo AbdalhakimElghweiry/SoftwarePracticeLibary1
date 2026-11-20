@@ -6,39 +6,40 @@ use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class CategoryController extends Controller
 {
-    public function index(): AnonymousResourceCollection
+    public function index()
     {
         return CategoryResource::collection(Category::with('books')->get());
     }
 
-    public function store(StoreCategoryRequest $request): JsonResponse
+    public function store(StoreCategoryRequest $request)
     {
         $category = Category::create($request->validated());
-
-        return CategoryResource::make($category)->response()->setStatusCode(201);
+        return (new CategoryResource($category))->response()->setStatusCode(201);
     }
 
-    public function show(Category $category): CategoryResource
+    public function show(Category $category)
     {
-        return CategoryResource::make($category->load('books'));
+        return new CategoryResource($category->load('books'));
     }
 
-    public function update(UpdateCategoryRequest $request, Category $category): CategoryResource
+    public function update(UpdateCategoryRequest $request, Category $category)
     {
         $category->update($request->validated());
-
-        return CategoryResource::make($category);
+        return new CategoryResource($category->load('books'));
     }
 
-    public function destroy(Category $category): JsonResponse
+    public function destroy(Category $category)
     {
-        $category->delete();
+        if ($category->books()->exists()) {
+            return response()->json([
+                'message' => 'This category still has books, delete or move them first',
+            ], 409);
+        }
 
-        return response()->json(['message' => 'Category Deleted']);
+        $category->delete();
+        return response()->noContent();
     }
 }

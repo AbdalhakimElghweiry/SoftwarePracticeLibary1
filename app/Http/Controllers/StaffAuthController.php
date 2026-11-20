@@ -3,16 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Staff;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class StaffAuthController extends Controller
 {
-    public function login(Request $request): JsonResponse
+    public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required|string',
         ]);
 
@@ -20,31 +19,23 @@ class StaffAuthController extends Controller
 
         if ($staff && Hash::check($request->password, $staff->password)) {
             $token = $staff->createToken('auth_token')->plainTextToken;
-
             return response()->json([
                 'message' => 'Login successful',
-                'token' => $token,
+                'token'   => $token,
             ]);
         }
 
-        return response()->json([
-            'message' => 'Invalid credentials',
-        ], 401);
+        return response()->json(['message' => 'Invalid credentials'], 401);
     }
 
-    public function me(): JsonResponse
+    public function me()
     {
-        return response()->json([
-            'staff' => auth()->user(),
-        ]);
+        return response()->json(['staff' => auth()->user()]);
     }
 
-    public function logout(Request $request): JsonResponse
+    public function logout(Request $request)
     {
         auth()->user()->currentAccessToken()->delete();
-
-        return response()->json([
-            'message' => 'Logged out successfully',
-        ]);
+        return response()->json(['message' => 'Logged out successfully']);
     }
 }
